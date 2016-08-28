@@ -41,6 +41,8 @@ typedef enum : NSUInteger {
     self.height = [[options objectForKey:@"height"] integerValue];
     self.quality = [[options objectForKey:@"quality"] integerValue];
 
+    self.maxImagesCount = [[options objectForKey:@"maximumImagesCount"] integerValue];
+
     self.callbackId = command.callbackId;
     [self launchGMImagePicker:allow_video title:title message:message];
 }
@@ -128,77 +130,89 @@ typedef enum : NSUInteger {
 
 - (void)assetsPickerController:(GMImagePickerController *)picker didFinishPickingAssets:(NSArray *)fetchArray
 {
-    [picker.presentingViewController dismissViewControllerAnimated:YES completion:nil];
-    
-    NSLog(@"GMImagePicker: User finished picking assets. Number of selected items is: %lu", (unsigned long)fetchArray.count);
-    
-    NSMutableArray * result_all = [[NSMutableArray alloc] init];
-    CGSize targetSize = CGSizeMake(self.width, self.height);
-    NSFileManager* fileMgr = [[NSFileManager alloc] init];
-    NSString* docsPath = [NSTemporaryDirectory()stringByStandardizingPath];
-
-    NSError* err = nil;
-    int i = 1;
-    NSString* filePath;
-    CDVPluginResult* result = nil;
-
-    for (GMFetchItem *item in fetchArray) {
+    if (fetchArray.count > self.maxImagesCount)
+    {
+        NSString *title = [NSString stringWithFormat:NSLocalizedString(@"%d PHOTOS SUBMITED", nil), fetchArray.count];
+        NSString *message = [NSString stringWithFormat:NSLocalizedString(@"You can only submit %d photos at a time.", nil), self.maxImagesCount];
+        [[[UIAlertView alloc] initWithTitle:title
+                                    message:message
+                                   delegate:nil
+                          cancelButtonTitle:nil
+                          otherButtonTitles:NSLocalizedString(@"OK", nil), nil] show];
+    }
+    else
+    {
+        [picker.presentingViewController dismissViewControllerAnimated:YES completion:nil];
         
-        if ( !item.image_fullsize ) {
-            continue;
-        }
-      
-        do {
-            filePath = [NSString stringWithFormat:@"%@/%@%03d.%@", docsPath, CDV_PHOTO_PREFIX, i++, @"jpg"];
-        } while ([fileMgr fileExistsAtPath:filePath]);
-
-        NSData* data = nil;
-        if (self.width == 0 && self.height == 0) {
-            // no scaling required
-            if (self.outputType == BASE64_STRING){
-                UIImage* image = [UIImage imageNamed:item.image_fullsize];
-                [result_all addObject:[UIImageJPEGRepresentation(image, self.quality/100.0f) base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength]];
-            } else {
-                if (self.quality == 100) {
-                    // no scaling, no downsampling, this is the fastest option
-                    [result_all addObject:item.image_fullsize];
-                } else {
-                    // resample first
+        NSLog(@"GMImagePicker: User finished picking assets. Number of selected items is: %lu", (unsigned long)fetchArray.count);
+        
+        NSMutableArray * result_all = [[NSMutableArray alloc] init];
+        CGSize targetSize = CGSizeMake(self.width, self.height);
+        NSFileManager* fileMgr = [[NSFileManager alloc] init];
+        NSString* docsPath = [NSTemporaryDirectory()stringByStandardizingPath];
+    
+        NSError* err = nil;
+        int i = 1;
+        NSString* filePath;
+        CDVPluginResult* result = nil;
+        for (GMFetchItem *item in fetchArray) {
+            
+            if ( !item.image_fullsize ) {
+                continue;
+            }
+          
+            do {
+                filePath = [NSString stringWithFormat:@"%@/%@%03d.%@", docsPath, CDV_PHOTO_PREFIX, i++, @"jpg"];
+            } while ([fileMgr fileExistsAtPath:filePath]);
+    
+            NSData* data = nil;
+            if (self.width == 0 && self.height == 0) {
+                // no scaling required
+                if (self.outputType == BASE64_STRING){
                     UIImage* image = [UIImage imageNamed:item.image_fullsize];
-                    data = UIImageJPEGRepresentation(image, self.quality/100.0f);
-                    if (![data writeToFile:filePath options:NSAtomicWrite error:&err]) {
-                        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[err localizedDescription]];
-                        break;
+                    [result_all addObject:[UIImageJPEGRepresentation(image, self.quality/100.0f) base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength]];
+                } else {
+                    if (self.quality == 100) {
+                        // no scaling, no downsampling, this is the fastest option
+                        [result_all addObject:item.image_fullsize];
+                    } else {
+                        // resample first
+                        UIImage* image = [UIImage imageNamed:item.image_fullsize];
+                        data = UIImageJPEGRepresentation(image, self.quality/100.0f);
+                        if (![data writeToFile:filePath options:NSAtomicWrite error:&err]) {
+                            result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[err localizedDescription]];
+                            break;
+                        } else {
+                            [result_all addObject:[[NSURL fileURLWithPath:filePath] absoluteString]];
+                        }
+                    }
+                }
+            } else {
+                // scale
+                UIImage* image = [UIImage imageNamed:item.image_fullsize];
+                UIImage* scaledImage = [self imageByScalingNotCroppingForSize:image toSize:targetSize];
+                data = UIImageJPEGRepresentation(scaledImage, self.quality/100.0f);
+    
+                if (![data writeToFile:filePath options:NSAtomicWrite error:&err]) {
+                    result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[err localizedDescription]];
+                    break;
+                } else {
+                    if(self.outputType == BASE64_STRING){
+                        [result_all addObject:[data base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength]];
                     } else {
                         [result_all addObject:[[NSURL fileURLWithPath:filePath] absoluteString]];
                     }
                 }
             }
-        } else {
-            // scale
-            UIImage* image = [UIImage imageNamed:item.image_fullsize];
-            UIImage* scaledImage = [self imageByScalingNotCroppingForSize:image toSize:targetSize];
-            data = UIImageJPEGRepresentation(scaledImage, self.quality/100.0f);
-
-            if (![data writeToFile:filePath options:NSAtomicWrite error:&err]) {
-                result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[err localizedDescription]];
-                break;
-            } else {
-                if(self.outputType == BASE64_STRING){
-                    [result_all addObject:[data base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength]];
-                } else {
-                    [result_all addObject:[[NSURL fileURLWithPath:filePath] absoluteString]];
-                }
-            }
         }
-    }
+        
+        if (result == nil) {
+            result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:result_all];
+        }
     
-    if (result == nil) {
-        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:result_all];
+        [self.viewController dismissViewControllerAnimated:YES completion:nil];
+        [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
     }
-
-    [self.viewController dismissViewControllerAnimated:YES completion:nil];
-    [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
     
 }
 
