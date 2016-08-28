@@ -63,6 +63,15 @@ window.imagePicker.getPictures(
         
         // quality of resized image, defaults to 100
         quality: int (0-100),
+        
+         // allow selection of videos, defaults to false
+        allow_video: boolean,
+        
+         // set the title of the picker, defaults to 'Select an Album'
+        title: string,
+        
+         // set the message of the picker, defaults to null
+        message: string,
 
         // output type, defaults to FILE_URIs.
         // available options are 
@@ -77,7 +86,13 @@ When outputType is FILE_URI the plugin returns images that are stored in a tempo
 
 ## Libraries used
 
-#### ELCImagePicker
+#### GMImagePicker 
+
+For iOS this plugin uses the GMImagePicker, which replaces the ELCImagePickerController used in previous imagePicker.  GMImagePicker uses the MIT License which can be found in the file LICENSE.
+
+https://github.com/guillermomuntaner/GMImagePicker
+
+#### ELCImagePicker (OLD)
 
 For iOS this plugin uses the ELCImagePickerController, with slight modifications for the iOS image picker.  ELCImagePicker uses the MIT License which can be found in the file LICENSE.
 
