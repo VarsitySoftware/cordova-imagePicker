@@ -132,8 +132,8 @@ typedef enum : NSUInteger {
 {
     if (fetchArray.count > self.maxImagesCount)
     {
-        NSString *title = [NSString stringWithFormat:NSLocalizedString(@"%d PHOTOS SUBMITED", nil), fetchArray.count];
-        NSString *message = [NSString stringWithFormat:NSLocalizedString(@"You can only submit %d photos at a time.", nil), self.maxImagesCount];
+        NSString *title = [NSString stringWithFormat:NSLocalizedString(@"%d PHOTOS SELECTED!", nil), fetchArray.count];
+        NSString *message = [NSString stringWithFormat:NSLocalizedString(@"You can only select %d photos at a time.", nil), self.maxImagesCount];
         [[[UIAlertView alloc] initWithTitle:title
                                     message:message
                                    delegate:nil
