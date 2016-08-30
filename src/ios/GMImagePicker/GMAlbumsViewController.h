@@ -27,6 +27,7 @@ static CGSize const kAlbumThumbnailSize3 = {62.0f , 62.0f};
 
 @interface GMAlbumsViewController : UITableViewController
 
-- (id)init:(bool)allow_v;
+//- (id)init:(bool)allow_v;
+- (id)init : (int)media_type;
 
 @end
