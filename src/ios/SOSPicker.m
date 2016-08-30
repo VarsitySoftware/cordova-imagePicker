@@ -3,11 +3,11 @@
 //  SyncOnSet
 //
 //  Created by Christopher Sullivan on 10/25/13.
+//  Updated by John Weaver on 08/30/16
 //
 //
 
 #import "SOSPicker.h"
-
 
 #import "GMImagePickerController.h"
 #import "GMFetchItem.h"
@@ -31,7 +31,8 @@ typedef enum : NSUInteger {
     NSDictionary *options = [command.arguments objectAtIndex: 0];
   
     self.outputType = [[options objectForKey:@"outputType"] integerValue];
-    BOOL allow_video = [[options objectForKey:@"allow_video" ] boolValue ];
+	int media_type = [[options objectForKey:@"media_type" ] integerValue ];
+    //BOOL allow_video = [[options objectForKey:@"allow_video" ] boolValue ];
     NSString * title = [options objectForKey:@"title"];
     NSString * message = [options objectForKey:@"message"];
     if (message == (id)[NSNull null]) {
@@ -44,12 +45,15 @@ typedef enum : NSUInteger {
     self.maxImagesCount = [[options objectForKey:@"maximumImagesCount"] integerValue];
 
     self.callbackId = command.callbackId;
-    [self launchGMImagePicker:allow_video title:title message:message];
+    //[self launchGMImagePicker:allow_video title:title message:message];
+	[self launchGMImagePicker:media_type title:title message:message];
 }
 
-- (void)launchGMImagePicker:(bool)allow_video title:(NSString *)title message:(NSString *)message
+//- (void)launchGMImagePicker:(bool)allow_video title:(NSString *)title message:(NSString *)message
+- (void)launchGMImagePicker:(int)media_type title:(NSString *)title message:(NSString *)message
 {
-    GMImagePickerController *picker = [[GMImagePickerController alloc] init:allow_video];
+    //GMImagePickerController *picker = [[GMImagePickerController alloc] init:allow_video];
+	GMImagePickerController *picker = [[GMImagePickerController alloc] init:media_type];
     picker.delegate = self;
     picker.title = title;
     picker.customNavigationBarPrompt = message;
