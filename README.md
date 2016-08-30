@@ -64,8 +64,8 @@ window.imagePicker.getPictures(
         // quality of resized image, defaults to 100
         quality: int (0-100),
         
-         // allow selection of videos, defaults to false
-        allow_video: boolean,
+         // allow selection of photos (0), videos (1) or all (2), defaults to photos
+        media_type: int (0-2),
         
          // set the title of the picker, defaults to 'Select an Album'
         title: string,
