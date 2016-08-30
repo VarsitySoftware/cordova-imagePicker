@@ -34,12 +34,14 @@
 
 
 @implementation GMAlbumsViewController{
-    bool allow_video;
+    //bool allow_video;
+	int media_type;
 }
 
 @synthesize dic_asset_fetches;
 
-- (id)init:(bool)allow_v
+//- (id)init:(bool)allow_v
+- (id)init:(int)media_t
 {
     if (self = [super initWithStyle:UITableViewStylePlain])
     {
@@ -48,7 +50,7 @@
     
     dic_asset_fetches = [[NSMutableDictionary alloc] init];
     
-    allow_video = allow_v;
+    media_type = media_t;
     
     return self;
 }
@@ -143,8 +145,24 @@ static NSString * const CollectionCellReuseIdentifier = @"CollectionCell";
     //This way I have acces to the number of items in each album, I can load the 3
     //thumbnails directly and I can pass the fetched result to the gridViewController.
     
-    NSPredicate * predicatePHAsset = allow_video? nil : [NSPredicate predicateWithFormat:@"mediaType == %d", PHAssetMediaTypeImage];
-    
+    //NSPredicate * predicatePHAsset = allow_video? nil : [NSPredicate predicateWithFormat:@"mediaType == %d", PHAssetMediaTypeImage];
+	//NSPredicate * predicatePHAsset = media_type? nil : [NSPredicate predicateWithFormat:@"mediaType == %d", PHAssetMediaTypeImage];
+    NSPredicate * predicatePHAsset = nil;
+
+	if (media_type == 0)
+	{
+		predicatePHAsset = [NSPredicate predicateWithFormat:@"mediaType == %d", PHAssetMediaTypeImage];
+	}
+	if (media_type == 1)
+	{
+		predicatePHAsset = [NSPredicate predicateWithFormat:@"mediaType == %d", PHAssetMediaTypeVideo];
+	}
+	if (media_type == 2)
+	{
+		predicatePHAsset = nil;
+	}
+
+
     PHFetchOptions *options = [[PHFetchOptions alloc] init];
     options.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"creationDate" ascending:NO]];
     options.predicate = predicatePHAsset;
