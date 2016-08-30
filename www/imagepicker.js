@@ -35,6 +35,7 @@ ImagePicker.prototype.validateOutputType = function(options){
 *		         image will be returned)
 *		.height - height to resize image to
 *		.quality - quality of resized image, defaults to 100
+*       .media_type - allow selection of photos (0), videos (1) or all (2), defaults to photos
 *       .outputType - type of output returned. defaults to file URIs. 
 *					  Please see ImagePicker.OutputType for available values.
 */
@@ -50,7 +51,8 @@ ImagePicker.prototype.getPictures = function(success, fail, options) {
 		width: options.width ? options.width : 0,
 		height: options.height ? options.height : 0,
 		quality: options.quality ? options.quality : 100,
-		allow_video: options.allow_video ? options.allow_video : false,
+		media_type: options.media_type ? options.media_type : 0,
+		//allow_video: options.allow_video ? options.allow_video : false,
 		title: options.title ? options.title : 'Select an Album', // the default is the message of the old plugin impl
 		message: options.message ? options.message : null, // the old plugin impl didn't have it, so passing null by default
 		outputType: options.outputType ? options.outputType : this.OutputType.FILE_URI
