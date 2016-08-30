@@ -16,11 +16,14 @@
 
 @implementation GMImagePickerController
 
-- (id)init:(bool)allow_v
+//- (id)init:(bool)allow_v
+- (id)init:(int)media_type
 {
     if (self = [super init])
     {
-        _allow_video = allow_v;
+        //_allow_video = allow_v;
+
+		_media_type = media_type;
         
         _selectedAssets = [[NSMutableArray alloc] init];
         _selectedFetches = [[NSMutableArray alloc] init];
@@ -74,7 +77,8 @@
 
 - (void)setupNavigationController
 {
-    GMAlbumsViewController *albumsViewController = [[GMAlbumsViewController alloc] init:_allow_video];
+    //GMAlbumsViewController *albumsViewController = [[GMAlbumsViewController alloc] init:_allow_video];
+	GMAlbumsViewController *albumsViewController = [[GMAlbumsViewController alloc] init:_media_type];
     _navigationController = [[UINavigationController alloc] initWithRootViewController:albumsViewController];
     _navigationController.delegate = self;
     
