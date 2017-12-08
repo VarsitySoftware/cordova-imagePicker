@@ -10,7 +10,6 @@
 
 #import <Photos/Photos.h>
 
-
 @interface GMFetchItem : NSObject
 
 @property (nonatomic, assign) bool be_progressed;
@@ -19,6 +18,8 @@
 @property (nonatomic, strong) NSString * image_fullsize;
 @property (nonatomic, strong) NSString * image_thumb;
 
+@property (nonatomic, strong) NSString * video_path;
+@property (nonatomic, assign) double video_preferred_angle;
 
 @property (nonatomic, assign) bool be_saving_img_thumb;
 @property (nonatomic, assign) bool be_saving_img;
