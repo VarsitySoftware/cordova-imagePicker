@@ -15,11 +15,9 @@
 //#import "PSYBlockTimer.h"
 #import "GMFetchItem.h"
 
-
-
 #define CDV_PHOTO_PREFIX @"cdv_photo_"
 #define CDV_THUMB_PREFIX @"cdv_thumb_"
-
+#define CDV_VIDEO_PREFIX @"cdv_video_"
 
 //Helper methods
 @implementation NSIndexSet (Convenience)
@@ -432,17 +430,62 @@ NSString * const GMGridViewCellIdentifier = @"GMGridViewCellIdentifier";
 
 #pragma mark - Collection View Delegate
 
+- (NSString*)tempFileName:(NSString*)extension
+{
+    NSString* docsPath = [NSTemporaryDirectory()stringByStandardizingPath];
+    NSFileManager* fileMgr = [[NSFileManager alloc] init]; // recommended by Apple (vs [NSFileManager defaultManager]) to be threadsafe
+    NSString* filePath;
+    
+    // generate unique file name
+    int i = 0;
+    do {
+        filePath = [NSString stringWithFormat:@"%@/%@%03d.%@", docsPath, CDV_VIDEO_PREFIX, i++, extension];
+    } while ([fileMgr fileExistsAtPath:filePath]);
+    
+	//NSLog(@"TEMP FILE PATH: %@", filePath);
+        
+    return filePath;
+}
+
+static inline CGFloat RadiansToDegrees(CGFloat radians) {
+  return radians * 180 / M_PI;
+};
+
 - (BOOL)collectionView:(UICollectionView *)collectionView shouldSelectItemAtIndexPath:(NSIndexPath *)indexPath
 {
     PHAsset *asset = self.assetsFetchResults[indexPath.item];
+
+	//NSLog(@"MAKING SELECTION!!!");       
+	
     //GMFetchItem * fetch_item = [dic_asset_fetches objectForKey:[ NSNumber numberWithLong:indexPath.item ]];
     GMFetchItem * fetch_item = [dic_asset_fetches objectForKey:asset];
-    
+
     GMGridViewCell *cell = (GMGridViewCell *)[collectionView cellForItemAtIndexPath:indexPath];
     
     if ( cell == nil || fetch_item==nil || fetch_item.be_progressed ) {
         return NO;
     }
+
+	if (asset.mediaType == PHAssetMediaTypeVideo)
+	{
+		NSLog(@"VIDEO DURATION: %f", asset.duration);
+
+		NSInteger intMaxVideoDuration = self.picker.maxVideoDuration;
+    
+		if (asset.duration > intMaxVideoDuration)
+		{
+			//NSString *strMaxDuration = @"120";
+			NSString *title = @"VIDEO TOO LONG!";
+			NSString *message = [NSString stringWithFormat:NSLocalizedString(@"Video duration cannot exceed %d seconds.", nil), intMaxVideoDuration];
+			[[[UIAlertView alloc] initWithTitle:title
+                    message:message
+                    delegate:nil
+            cancelButtonTitle:nil
+            otherButtonTitles:NSLocalizedString(@"OK", nil), nil] show];
+
+			return NO;
+		}				
+	}
  
     if ( fetch_item.be_saving_img == false && fetch_item.image_fullsize == nil  ) {
         
@@ -467,8 +510,6 @@ NSString * const GMGridViewCellIdentifier = @"GMGridViewCellIdentifier";
             }
             
         }];
-        
-        
             
         [ self.imageManager requestImageForAsset:asset targetSize:PHImageManagerMaximumSize contentMode:PHImageContentModeDefault options:ph_options resultHandler:^(UIImage *result, NSDictionary *info) {
             
@@ -524,16 +565,96 @@ NSString * const GMGridViewCellIdentifier = @"GMGridViewCellIdentifier";
                     }
 
                     //Your main thread code goes in here
-                    [ collectionView selectItemAtIndexPath:indexPath animated:NO scrollPosition:UICollectionViewScrollPositionNone ];
-                    [ self collectionView:collectionView didSelectItemAtIndexPath:indexPath ];
-                });
+
+					[ collectionView selectItemAtIndexPath:indexPath animated:NO scrollPosition:UICollectionViewScrollPositionNone ];
+					[ self collectionView:collectionView didSelectItemAtIndexPath:indexPath ];
+
+					if (asset.mediaType == PHAssetMediaTypeVideo)
+					{						
+						fetch_item.video_preferred_angle = 0;
+
+						NSLog(@"VIDEO DURATION: %f", asset.duration);
+						//NSLog(@"THIS IS A VIDEO!!!");       
+
+						NSString* extension = @"MOV";
+						NSString* fileName = [self tempFileName:extension];
+
+						NSString* filePath = [NSString stringWithFormat:@"file:///private%@", fileName];
+						NSURL *fileURL = [NSURL URLWithString:filePath];
+
+						NSLog(@"VIDEO URL: %@", filePath);
+						fetch_item.video_path = filePath;
+
+						dispatch_async(dispatch_get_main_queue(), ^{
+							PHAssetResource * resource = [[PHAssetResource assetResourcesForAsset:asset] firstObject];
+
+							NSLog(@"COPYING SELECTED ASSET: %@", filePath);
+							[[PHAssetResourceManager defaultManager] writeDataForAssetResource:resource toFile:fileURL options:nil completionHandler:^(NSError * _Nullable error) {
+								if (error) {                
+									NSLog(@"Failed to write a resource: %@", [error localizedDescription]);
+								}            
+							}];
+
+							[self.imageManager requestAVAssetForVideo:asset options:nil resultHandler:^(AVAsset *asset, AVAudioMix *audioMix, NSDictionary *info)
+								{
+									if ([asset isKindOfClass:[AVURLAsset class]])
+									{
+										// GET SIZE OF FILE
+
+										AVURLAsset* urlAsset = (AVURLAsset*)asset;
+
+										NSNumber *intFileSize;
+
+										[urlAsset.URL getResourceValue:&intFileSize forKey:NSURLFileSizeKey error:nil];
+										NSLog(@"VIDEO FILE SIZE is %f MB",[intFileSize floatValue]/(1024.0*1024.0)); //size is 43.703005
+
+										////////////////////
+
+										AVAssetTrack* videoTrack = [[asset tracksWithMediaType:AVMediaTypeVideo] objectAtIndex:0];
+
+										CGSize size = [videoTrack naturalSize];
+										CGAffineTransform txf = [videoTrack preferredTransform];
+
+										CGFloat preferredAngleInDegree  = RadiansToDegrees(atan2(txf.b, txf.a));
+
+										//NSLog(@"Transformation a %f - b %f - c %f - d %f", txf.a, txf.b, txf.c, txf.d);
+										//NSLog(@"Transformation tx %f - ty %f", txf.tx, txf.ty);
+										//NSLog(@"Size width: %f - height: %f", size.width, size.height);
+
+										NSLog(@"VIDEO PREFERRED ANGLE: %f", preferredAngleInDegree);
+
+										fetch_item.video_preferred_angle = preferredAngleInDegree;
+
+										//NSURL *url = [(AVURLAsset*)asset URL];
+										 // do what you want with it
+										//NSLog(@"VIDEO URL: %@", url.absoluteString);
+										//fetch_item.video_path = url.absoluteString;
+									}
+								}
+							];
+						});						
+
+						//[[PHImageManager defaultManager] requestAVAssetForVideo:asset options:nil resultHandler:^(AVAsset *asset, AVAudioMix *audioMix, NSDictionary *info)
+							//{
+								//if ([asset isKindOfClass:[AVURLAsset class]])
+								//{
+									//NSURL *url = [(AVURLAsset*)asset URL];
+									 // do what you want with it
+									//NSLog(@"VIDEO URL: %@", url.absoluteString);
+									//fetch_item.video_path = url.absoluteString;
+								//}
+							//}
+						//];		
+					}    
+					
+					
                 
+                });                
             });
             //});
             
-        }];
-        
-        
+        }];                
+		
         return NO;
     }
     
