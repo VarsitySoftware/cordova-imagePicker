@@ -10,7 +10,7 @@
 
 @implementation GMFetchItem
 
-@synthesize be_progressed, be_finished, percent, image_fullsize, image_thumb, be_saving_img, be_saving_img_thumb;
+@synthesize be_progressed, be_finished, percent, image_fullsize, image_thumb, be_saving_img, be_saving_img_thumb, video_path, video_preferred_angle;
 
 - (id)init{
     
@@ -22,7 +22,10 @@
     
     image_thumb = nil;
     image_fullsize = nil;
-    
+
+	video_path = nil;
+    video_preferred_angle = 0;
+
     be_saving_img = false;
     be_saving_img_thumb;
     
