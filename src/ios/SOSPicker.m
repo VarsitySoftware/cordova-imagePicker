@@ -3,7 +3,7 @@
 //  SyncOnSet
 //
 //  Created by Christopher Sullivan on 10/25/13.
-//  Updated by John Weaver on 08/30/16
+//  Updated by John Weaver on  12/7/2017
 //
 //
 
@@ -42,9 +42,11 @@ typedef enum : NSUInteger {
     self.height = [[options objectForKey:@"height"] integerValue];
     self.quality = [[options objectForKey:@"quality"] integerValue];
 
-    self.maxImagesCount = [[options objectForKey:@"maximumImagesCount"] integerValue];
+    self.maxCount = [[options objectForKey:@"maximumCount"] integerValue];
+	self.maxVideoDuration = [[options objectForKey:@"maximumVideoDuration"] integerValue];
 
     self.callbackId = command.callbackId;
+
     //[self launchGMImagePicker:allow_video title:title message:message];
 	[self launchGMImagePicker:media_type title:title message:message];
 }
@@ -61,6 +63,8 @@ typedef enum : NSUInteger {
     picker.colsInLandscape = 6;
     picker.minimumInteritemSpacing = 2.0;
     picker.modalPresentationStyle = UIModalPresentationPopover;
+
+	picker.maxVideoDuration = self.maxVideoDuration;
     
     UIPopoverPresentationController *popPC = picker.popoverPresentationController;
     popPC.permittedArrowDirections = UIPopoverArrowDirectionAny;
@@ -134,10 +138,10 @@ typedef enum : NSUInteger {
 
 - (void)assetsPickerController:(GMImagePickerController *)picker didFinishPickingAssets:(NSArray *)fetchArray
 {
-    if (fetchArray.count > self.maxImagesCount)
+    if (fetchArray.count > self.maxCount)
     {
         NSString *title = [NSString stringWithFormat:NSLocalizedString(@"%d PHOTOS SELECTED!", nil), fetchArray.count];
-        NSString *message = [NSString stringWithFormat:NSLocalizedString(@"You can only select %d photos at a time.", nil), self.maxImagesCount];
+        NSString *message = [NSString stringWithFormat:NSLocalizedString(@"You can only select %d photos at a time.", nil), self.maxCount];
         [[[UIAlertView alloc] initWithTitle:title
                                     message:message
                                    delegate:nil
@@ -158,9 +162,19 @@ typedef enum : NSUInteger {
         NSError* err = nil;
         int i = 1;
         NSString* filePath;
+		NSString* strResults;
+
         CDVPluginResult* result = nil;
         for (GMFetchItem *item in fetchArray) {
             
+			if (item.video_path ) {
+                NSLog(@"GOT VIDEO PATH: %@", item.video_path);
+            }	
+			
+			if (item.video_preferred_angle ) {
+                NSLog(@"GOT VIDEO PREFERRED ANGLE: %f", item.video_preferred_angle);
+            }		
+
             if ( !item.image_fullsize ) {
                 continue;
             }
@@ -178,7 +192,17 @@ typedef enum : NSUInteger {
                 } else {
                     if (self.quality == 100) {
                         // no scaling, no downsampling, this is the fastest option
-                        [result_all addObject:item.image_fullsize];
+						if (item.video_path)
+						{
+							//strResults = [NSString stringWithFormat:@"%@|%@", item.image_fullsize, item.video_path];
+							strResults = [NSString stringWithFormat:@"%@|%@|%f", item.image_fullsize, item.video_path, item.video_preferred_angle];
+						}
+						else
+						{
+							strResults = [NSString stringWithFormat:@"%@", item.image_fullsize];
+						}
+                        //[result_all addObject:item.image_fullsize];
+						[result_all addObject:strResults];
                     } else {
                         // resample first
                         UIImage* image = [UIImage imageNamed:item.image_fullsize];
@@ -187,7 +211,17 @@ typedef enum : NSUInteger {
                             result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[err localizedDescription]];
                             break;
                         } else {
-                            [result_all addObject:[[NSURL fileURLWithPath:filePath] absoluteString]];
+							if (item.video_path)
+							{
+								//strResults = [NSString stringWithFormat:@"%@|%@", [[NSURL fileURLWithPath:filePath] absoluteString], item.video_path];
+								strResults = [NSString stringWithFormat:@"%@|%@|%@", [[NSURL fileURLWithPath:filePath] absoluteString], item.video_path, item.video_preferred_angle];
+							}
+							else
+							{
+								strResults = [NSString stringWithFormat:@"%@", [[NSURL fileURLWithPath:filePath] absoluteString]];
+							}
+                            //[result_all addObject:[[NSURL fileURLWithPath:filePath] absoluteString]];
+							[result_all addObject:strResults];
                         }
                     }
                 }
@@ -204,7 +238,17 @@ typedef enum : NSUInteger {
                     if(self.outputType == BASE64_STRING){
                         [result_all addObject:[data base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength]];
                     } else {
-                        [result_all addObject:[[NSURL fileURLWithPath:filePath] absoluteString]];
+						if (item.video_path)
+						{
+							//strResults = [NSString stringWithFormat:@"%@|%@", [[NSURL fileURLWithPath:filePath] absoluteString], item.video_path];
+							strResults = [NSString stringWithFormat:@"%@|%@|%@", [[NSURL fileURLWithPath:filePath] absoluteString], item.video_path, item.video_preferred_angle];
+						}
+						else
+						{
+							strResults = [NSString stringWithFormat:@"%@", [[NSURL fileURLWithPath:filePath] absoluteString]];
+						}
+                        //[result_all addObject:[[NSURL fileURLWithPath:filePath] absoluteString]];
+						[result_all addObject:strResults];
                     }
                 }
             }
