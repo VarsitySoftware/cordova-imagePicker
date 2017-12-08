@@ -47,11 +47,12 @@ ImagePicker.prototype.getPictures = function(success, fail, options) {
 	this.validateOutputType(options);
 	
 	var params = {
-		maximumImagesCount: options.maximumImagesCount ? options.maximumImagesCount : 15,
+	    	maximumCount: options.maximumCount ? options.maximumCount : 15,
 		width: options.width ? options.width : 0,
 		height: options.height ? options.height : 0,
 		quality: options.quality ? options.quality : 100,
 		media_type: options.media_type ? options.media_type : 0,
+		maximumVideoDuration: options.maximumVideoDuration ? options.maximumVideoDuration : 120,
 		//allow_video: options.allow_video ? options.allow_video : false,
 		title: options.title ? options.title : 'Select an Album', // the default is the message of the old plugin impl
 		message: options.message ? options.message : null, // the old plugin impl didn't have it, so passing null by default
