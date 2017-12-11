@@ -46,18 +46,22 @@ ImagePicker.prototype.getPictures = function(success, fail, options) {
 
 	this.validateOutputType(options);
 	
-	var params = {
-	    	maximumCount: options.maximumCount ? options.maximumCount : 15,
-		width: options.width ? options.width : 0,
-		height: options.height ? options.height : 0,
-		quality: options.quality ? options.quality : 100,
-		media_type: options.media_type ? options.media_type : 0,
-		maximumVideoDuration: options.maximumVideoDuration ? options.maximumVideoDuration : 120,
-		//allow_video: options.allow_video ? options.allow_video : false,
-		title: options.title ? options.title : 'Select an Album', // the default is the message of the old plugin impl
-		message: options.message ? options.message : null, // the old plugin impl didn't have it, so passing null by default
-		outputType: options.outputType ? options.outputType : this.OutputType.FILE_URI
-	};
+    var params = {
+      maximumCount: options.maximumCount ? options.maximumCount : 15,
+      width: options.width ? options.width : 0,
+      height: options.height ? options.height : 0,
+      quality: options.quality ? options.quality : 100,
+      media_type: options.media_type ? options.media_type : 0,
+      maximumVideoDuration: options.maximumVideoDuration ? options.maximumVideoDuration : 120,
+      //allow_video: options.allow_video ? options.allow_video : false,
+      title: options.title ? options.title : 'Select an Album', // the default is the message of the old plugin impl
+      message: options.message ? options.message : null, // the old plugin impl didn't have it, so passing null by default
+      outputType: options.outputType ? options.outputType : this.OutputType.FILE_URI,
+
+      error_max_exceeded_title: options.error_max_exceeded_title ? options.error_max_exceeded_title : null, 
+      error_max_exceeded_message: options.error_max_exceeded_message ? options.error_max_exceeded_message : null, 
+      error_max_exceeded_ok: options.error_max_exceeded_ok ? options.error_max_exceeded_ok : null
+    };
 	
 	return cordova.exec(success, fail, "ImagePicker", "getPictures", [params]);
 };
