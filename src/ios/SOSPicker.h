@@ -24,4 +24,8 @@
 @property (nonatomic, assign) NSInteger quality;
 @property (nonatomic, assign) NSInteger outputType;
 
+@property (copy) NSString* error_max_exceeded_title;
+@property (copy) NSString* error_max_exceeded_message;
+@property (copy) NSString* error_max_exceeded_ok;
+
 @end
