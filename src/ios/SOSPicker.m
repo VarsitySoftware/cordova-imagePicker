@@ -43,7 +43,11 @@ typedef enum : NSUInteger {
     self.quality = [[options objectForKey:@"quality"] integerValue];
 
     self.maxCount = [[options objectForKey:@"maximumCount"] integerValue];
-	self.maxVideoDuration = [[options objectForKey:@"maximumVideoDuration"] integerValue];
+	  self.maxVideoDuration = [[options objectForKey:@"maximumVideoDuration"] integerValue];
+
+    self.error_max_exceeded_title = [options objectForKey:@"error_max_exceeded_title"];
+    self.error_max_exceeded_message = [options objectForKey:@"error_max_exceeded_message"];
+    self.error_max_exceeded_ok = [options objectForKey:@"error_max_exceeded_ok"];
 
     self.callbackId = command.callbackId;
 
@@ -140,13 +144,14 @@ typedef enum : NSUInteger {
 {
     if (fetchArray.count > self.maxCount)
     {
-        NSString *title = [NSString stringWithFormat:NSLocalizedString(@"%d PHOTOS SELECTED!", nil), fetchArray.count];
-        NSString *message = [NSString stringWithFormat:NSLocalizedString(@"You can only select %d photos at a time.", nil), self.maxCount];
-        [[[UIAlertView alloc] initWithTitle:title
-                                    message:message
-                                   delegate:nil
-                          cancelButtonTitle:nil
-                          otherButtonTitles:NSLocalizedString(@"OK", nil), nil] show];
+        //NSString *title = [NSString stringWithFormat:NSLocalizedString(@"%d PHOTOS SELECTED!", nil), fetchArray.count];
+        //NSString *message = [NSString stringWithFormat:NSLocalizedString(@"You can only select %d photos at a time.", nil), self.maxCount];
+        //[[[UIAlertView alloc] initWithTitle:title message:message delegate:nil cancelButtonTitle:nil otherButtonTitles:NSLocalizedString(@"OK", nil), nil] show];
+
+        NSString *title = [NSString stringWithFormat:NSLocalizedString(self.error_max_exceeded_title, nil), fetchArray.count];
+        NSString *message = [NSString stringWithFormat:NSLocalizedString(self.error_max_exceeded_message, nil), self.maxCount];
+        [[[UIAlertView alloc] initWithTitle:title message:message delegate:nil cancelButtonTitle:nil otherButtonTitles:NSLocalizedString(self.error_max_exceeded_ok, nil), nil] show];
+        
     }
     else
     {
