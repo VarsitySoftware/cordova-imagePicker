@@ -1,0 +1,20 @@
+{
+    "version": "0.0.1",
+    "name": "cordova-imagePicker",
+    "cordova_name": "Cordova Image Picker",
+    "description": "Cordova Image Picker",
+    "license": "MIT",
+    "repo": "https://github.com/VarsitySoftware/cordova-imagePicker.git",
+    "keywords": [
+        "cordova",
+        "ios",
+        "UIStatusBarHidden",
+        "UIViewControllerBasedStatusBarAppearance",
+        "ios9"
+    ],
+    "platforms": [
+        "ios"
+    ],
+    "engines": [],
+    "englishdoc": ""
+}
