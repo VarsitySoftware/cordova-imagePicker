@@ -51,7 +51,7 @@ static CGSize const kPopoverContentSize = {480, 720};
 @property (nonatomic, strong) NSArray* customSmartCollections;
 
 /**
- *  If set, it displays a promt in the navigation bar
+ *  If set, it displays a prompt in the navigation bar
  */
 @property (nonatomic) NSString* customNavigationBarPrompt;
 
@@ -83,6 +83,10 @@ static CGSize const kPopoverContentSize = {480, 720};
 @property (nonatomic) NSInteger colsInLandscape;
 @property (nonatomic) double minimumInteritemSpacing;
 
+/**
+*  If set, it checks for maximum video duration which can be selected
+*/
+@property (nonatomic)NSInteger maxVideoDuration;
 
 @property (nonatomic, strong) UINavigationController *navigationController;
 
